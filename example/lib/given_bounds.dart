@@ -3,12 +3,12 @@
 // found in the LICENSE file.
 
 import 'package:flutter/material.dart';
-import 'package:maplibre_gl/mapbox_gl.dart';
+import 'package:maplibre_gl/maplibre_gl.dart';
 
 import 'page.dart';
 
 class GivenBoundsPage extends ExamplePage {
-  GivenBoundsPage()
+  const GivenBoundsPage({super.key})
       : super(const Icon(Icons.map_sharp), 'Changing given bounds');
 
   @override
@@ -18,7 +18,8 @@ class GivenBoundsPage extends ExamplePage {
 }
 
 class GivenBounds extends StatefulWidget {
-  const GivenBounds();
+  const GivenBounds({super.key});
+
   @override
   State createState() => GivenBoundsState();
 }
