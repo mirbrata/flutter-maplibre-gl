@@ -44,7 +44,9 @@ Documentation is available on the docs branch in the doc/api folder and automati
 Please visit [https://github.com/maplibre/maplibre-gl-js](https://github.com/maplibre/maplibre-gl-js) and [https://github.com/maplibre/maplibre-gl-native](https://github.com/maplibre/maplibre-gl-native) for more information about the Maplibre libraries.
 
 ### iOS
-To use this plugin with iOS, you do not need to adapt your app's Podfile anymore! If you previously adapted the Podfile because of the instructions here, this should not be necessary anymore with the latest changes and you should be able to remove these lines from your Podfile: 
+To use this plugin with iOS, you **do not** need to adapt your app's Podfile anymore! If you previously adapted the Podfile because of the instructions here, this should not be necessary anymore with the latest changes and you should actually remove these lines from your Podfile to avoid build errors: 
+<details>
+<summary>View obsolete code</summary>
 
 ```ruby
 source 'https://cdn.cocoapods.org/'
@@ -53,7 +55,7 @@ source 'https://github.com/m0nac0/flutter-maplibre-podspecs.git'
 pod 'MapLibre'
 pod 'MapLibreAnnotationExtension'
 ```
-
+</details>
 You can also check our example app's Podfile: https://github.com/maplibre/flutter-maplibre-gl/blob/main/example/ios/Podfile
 
 ### Web
@@ -80,7 +82,7 @@ Include the following JavaScript and CSS files in the `<head>` of the `web/index
 
 ## Map Styles
 
-Map styles can be supplied by setting the `styleString` in the `MapOptions`. The following formats are supported:
+Map styles can be supplied by setting the `styleString` in the `MaplibreMap` constructor. The following formats are supported:
 
 1. Passing the URL of the map style. This should be a custom map style served remotely using a URL that start with 'http(s)://'
 2. Passing the style as a local asset. Create a JSON file in the `assets` and add a reference in `pubspec.yml`. Set the style string to the relative path for this asset in order to load it into the map.
@@ -176,3 +178,5 @@ Note : iOS will display the error : `NSPredicate: Use of 'mgl_does:have:' as an 
 
 
 [Feedback](https://github.com/maplibre/flutter-maplibre-gl/issues) and contributions are very welcome!
+
+RELEASE.md contains information on how we cut releases.

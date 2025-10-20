@@ -8,7 +8,7 @@ typedef OnPlatformViewCreatedCallback = void Function(int);
 abstract class MapLibreGlPlatform {
   static MethodChannelMaplibreGl? _instance;
 
-  /// The default instance of [MapboxGlPlatform] to use.
+  /// The default instance of [MaplibreGlPlatform] to use.
   ///
   /// Defaults to [MethodChannelMaplibreGl].
   ///
@@ -149,6 +149,9 @@ abstract class MapLibreGlPlatform {
       double? maxzoom,
       dynamic filter,
       required bool enableInteraction});
+
+  Future<void> setLayerProperties(
+      String layerId, Map<String, dynamic> properties);
 
   Future<void> addCircleLayer(
       String sourceId, String layerId, Map<String, dynamic> properties,
