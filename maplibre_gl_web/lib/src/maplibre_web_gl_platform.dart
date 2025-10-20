@@ -1,8 +1,4 @@
-part of maplibre_gl_web;
-
-//TODO Url taken from the Maptiler tutorial; use official and stable release once available
-final _maplibreGlCssUrl =
-    'https://cdn.maptiler.com/maplibre-gl-js/v1.13.0-rc.4/mapbox-gl.css';
+part of '../maplibre_gl_web.dart';
 
 class MaplibreMapController extends MapLibreGlPlatform
     implements MapLibreMapOptionsSink {
@@ -17,7 +13,7 @@ class MaplibreMapController extends MapLibreGlPlatform
   bool _dragEnabled = true;
   final _addedFeaturesByLayer = <String, FeatureCollection>{};
 
-  final _interactiveFeatureLayerIds = Set<String>();
+  final _interactiveFeatureLayerIds = <String>{};
 
   bool _trackCameraPosition = false;
   GeolocateControl? _geolocateControl;
@@ -34,9 +30,8 @@ class MaplibreMapController extends MapLibreGlPlatform
       OnPlatformViewCreatedCallback onPlatformViewCreated,
       Set<Factory<OneSequenceGestureRecognizer>>? gestureRecognizers) {
     _creationParams = creationParams;
-    _registerViewFactory(onPlatformViewCreated, this.hashCode);
-    return HtmlElementView(
-        viewType: 'plugins.flutter.io/mapbox_gl_${this.hashCode}');
+    _registerViewFactory(onPlatformViewCreated, hashCode);
+    return HtmlElementView(viewType: 'plugins.flutter.io/mapbox_gl_$hashCode');
   }
 
   @override
@@ -61,7 +56,6 @@ class MaplibreMapController extends MapLibreGlPlatform
 
   @override
   Future<void> initPlatform(int id) async {
-    await _addStylesheetToShadowRoot(_mapElement);
     if (_creationParams.containsKey('initialCameraPosition')) {
       var camera = _creationParams['initialCameraPosition'];
       _dragEnabled = _creationParams['dragEnabled'] ?? true;
@@ -69,7 +63,7 @@ class MaplibreMapController extends MapLibreGlPlatform
       _map = MapLibreMap(
         MapOptions(
           container: _mapElement,
-          style: 'https://demotiles.maplibre.org/style.json',
+          style: _creationParams["styleString"],
           center: LngLat(camera['target'][1], camera['target'][0]),
           zoom: camera['zoom'],
           bearing: camera['bearing'],
@@ -102,7 +96,7 @@ class MaplibreMapController extends MapLibreGlPlatform
       // Due to the fact that the resize call is quite expensive it should not be called for every triggered event but only the last one, like "onMoveEnd".
       // But because there is no event type for the end, there is only the option to spawn timers and cancel the previous ones if they get overwritten by a new event.
       lastResizeObserverTimer?.cancel();
-      lastResizeObserverTimer = Timer(Duration(milliseconds: 50), () {
+      lastResizeObserverTimer = Timer(const Duration(milliseconds: 50), () {
         _onMapResize();
       });
     });
@@ -133,7 +127,7 @@ class MaplibreMapController extends MapLibreGlPlatform
           'point': Point<double>(e.point.x.toDouble(), e.point.y.toDouble()),
           'origin': _dragOrigin,
           'current': current,
-          'delta': LatLng(0, 0),
+          'delta': const LatLng(0, 0),
           'eventType': 'start'
         };
         onFeatureDraggedPlatform(payload);
@@ -174,15 +168,6 @@ class MaplibreMapController extends MapLibreGlPlatform
       _dragPrevious = current;
       onFeatureDraggedPlatform(payload);
     }
-  }
-
-  Future<void> _addStylesheetToShadowRoot(html.HtmlElement e) async {
-    final link = html.LinkElement()
-      ..href = _maplibreGlCssUrl
-      ..rel = 'stylesheet';
-    e.append(link);
-
-    await link.onLoad.first;
   }
 
   @override
@@ -283,7 +268,7 @@ class MaplibreMapController extends MapLibreGlPlatform
   Future<List> queryRenderedFeatures(
       Point<double> point, List<String> layerIds, List<Object>? filter) async {
     Map<String, dynamic> options = {};
-    if (layerIds.length > 0) {
+    if (layerIds.isNotEmpty) {
       options['layers'] = layerIds;
     }
     if (filter != null) {
@@ -311,7 +296,7 @@ class MaplibreMapController extends MapLibreGlPlatform
   Future<List> queryRenderedFeaturesInRect(
       Rect rect, List<String> layerIds, String? filter) async {
     Map<String, dynamic> options = {};
-    if (layerIds.length > 0) {
+    if (layerIds.isNotEmpty) {
       options['layers'] = layerIds;
     }
     if (filter != null) {
@@ -431,7 +416,7 @@ class MaplibreMapController extends MapLibreGlPlatform
   }
 
   void _onMapResize() {
-    Timer(Duration(), () {
+    Timer(const Duration(), () {
       var container = _map.getContainer();
       var canvas = _map.getCanvas();
       var widthMismatch = canvas.clientWidth != container.clientWidth;
@@ -569,12 +554,12 @@ class MaplibreMapController extends MapLibreGlPlatform
         positionString = null;
     }
 
-    bool newShowComapss = compassEnabled ?? prevShowCompass ?? false;
-    String? newPosition = positionString ?? prevPosition ?? null;
+    bool newShowCompass = compassEnabled ?? prevShowCompass ?? false;
+    String? newPosition = positionString ?? prevPosition;
 
     _removeNavigationControl();
     _navigationControl = NavigationControl(NavigationControlOptions(
-      showCompass: newShowComapss,
+      showCompass: newShowCompass,
       showZoom: false,
       visualizePitch: false,
     ));
@@ -739,7 +724,7 @@ class MaplibreMapController extends MapLibreGlPlatform
   @override
   Future<LatLng> toLatLng(Point<num> screenLocation) async {
     var lngLat =
-        _map.unproject(geoPoint.Point(screenLocation.x, screenLocation.y));
+        _map.unproject(geo_point.Point(screenLocation.x, screenLocation.y));
     return LatLng(lngLat.lat as double, lngLat.lng as double);
   }
 
@@ -771,9 +756,9 @@ class MaplibreMapController extends MapLibreGlPlatform
   }
 
   @override
-  Future<void> removeLayer(String layerId) async {
-    _interactiveFeatureLayerIds.remove(layerId);
-    _map.removeLayer(layerId);
+  Future<void> removeLayer(String imageLayerId) async {
+    _interactiveFeatureLayerIds.remove(imageLayerId);
+    _map.removeLayer(imageLayerId);
   }
 
   @override
@@ -816,6 +801,7 @@ class MaplibreMapController extends MapLibreGlPlatform
     source.setData(data);
   }
 
+  @override
   Future setCameraBounds({
     required double west,
     required double north,
@@ -825,6 +811,24 @@ class MaplibreMapController extends MapLibreGlPlatform
   }) async {
     _map.fitBounds(LngLatBounds(LngLat(west, south), LngLat(east, north)),
         {'padding': padding});
+  }
+
+  @override
+  Future<void> addFillExtrusionLayer(
+      String sourceId, String layerId, Map<String, dynamic> properties,
+      {String? belowLayerId,
+      String? sourceLayer,
+      double? minzoom,
+      double? maxzoom,
+      dynamic filter,
+      required bool enableInteraction}) async {
+    return _addLayer(sourceId, layerId, properties, "fill-extrusion",
+        belowLayerId: belowLayerId,
+        sourceLayer: sourceLayer,
+        minzoom: minzoom,
+        maxzoom: maxzoom,
+        filter: filter,
+        enableInteraction: enableInteraction);
   }
 
   @override
@@ -881,6 +885,7 @@ class MaplibreMapController extends MapLibreGlPlatform
         enableInteraction: enableInteraction);
   }
 
+  @override
   Future<void> setLayerProperties(
       String layerId, Map<String, dynamic> properties) async {
     for (final entry in properties.entries) {
@@ -925,6 +930,21 @@ class MaplibreMapController extends MapLibreGlPlatform
       double? minzoom,
       double? maxzoom}) async {
     return _addLayer(sourceId, layerId, properties, "hillshade",
+        belowLayerId: belowLayerId,
+        sourceLayer: sourceLayer,
+        minzoom: minzoom,
+        maxzoom: maxzoom,
+        enableInteraction: false);
+  }
+
+  @override
+  Future<void> addHeatmapLayer(
+      String sourceId, String layerId, Map<String, dynamic> properties,
+      {String? belowLayerId,
+      String? sourceLayer,
+      double? minzoom,
+      double? maxzoom}) async {
+    return _addLayer(sourceId, layerId, properties, "heatmap",
         belowLayerId: belowLayerId,
         sourceLayer: sourceLayer,
         minzoom: minzoom,
@@ -1049,16 +1069,18 @@ class MaplibreMapController extends MapLibreGlPlatform
   }
 
   @override
-  Future<void> addSource(String sourceId, SourceProperties source) async {
-    _map.addSource(sourceId, source.toJson());
+  Future<void> addSource(String sourceId, SourceProperties properties) async {
+    _map.addSource(sourceId, properties.toJson());
   }
 
+  @override
   Future<void> addImageSource(
       String imageSourceId, Uint8List bytes, LatLngQuad coordinates) {
     // TODO: implement addImageSource
     throw UnimplementedError();
   }
 
+  @override
   Future<void> updateImageSource(
       String imageSourceId, Uint8List? bytes, LatLngQuad? coordinates) {
     // TODO: implement updateImageSource

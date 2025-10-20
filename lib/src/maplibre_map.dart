@@ -2,24 +2,24 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-part of maplibre_gl;
+part of '../maplibre_gl.dart';
 
 enum AnnotationType { fill, line, circle, symbol }
 
-typedef void MapCreatedCallback(MaplibreMapController controller);
+typedef MapCreatedCallback = void Function(MaplibreMapController controller);
 
 /// Shows a MapLibre map.
 /// Also refer to the documentation of [maplibre_gl] and [MaplibreMapController].
 class MaplibreMap extends StatefulWidget {
   const MaplibreMap({
-    Key? key,
+    super.key,
     required this.initialCameraPosition,
+    this.styleString = "https://demotiles.maplibre.org/style.json",
     this.onMapCreated,
     this.onStyleLoadedCallback,
     this.gestureRecognizers,
     this.compassEnabled = true,
     this.cameraTargetBounds = CameraTargetBounds.unbounded,
-    this.styleString,
     this.minMaxZoomPreference = MinMaxZoomPreference.unbounded,
     this.rotateGesturesEnabled = true,
     this.scrollGesturesEnabled = true,
@@ -36,6 +36,7 @@ class MaplibreMap extends StatefulWidget {
     this.compassViewMargins,
     this.attributionButtonPosition = AttributionButtonPosition.BottomRight,
     this.attributionButtonMargins,
+    this.iosLongClickDuration,
     this.onMapClick,
     this.onUserLocationUpdated,
     this.onMapLongClick,
@@ -62,8 +63,7 @@ class MaplibreMap extends StatefulWidget {
           "$myLocationRenderMode requires [myLocationEnabled] set to true.",
         ),
         assert(annotationOrder.length <= 4),
-        assert(annotationConsumeTapEvents.length > 0),
-        super(key: key);
+        assert(annotationConsumeTapEvents.length > 0);
 
   /// Defines the layer order of annotations displayed on map
   ///
@@ -88,6 +88,11 @@ class MaplibreMap extends StatefulWidget {
   /// The initial position of the map's camera.
   final CameraPosition initialCameraPosition;
 
+  /// How long a user has to click the map **on iOS** until a long click is registered.
+  /// Has no effect on web or Android. Can not be changed at runtime, only the initial value is used.
+  /// If null, the default value of the native MapLibre library / of the OS is used.
+  final Duration? iosLongClickDuration;
+
   /// True if the map should show a compass when rotated.
   final bool compassEnabled;
 
@@ -109,7 +114,7 @@ class MaplibreMap extends StatefulWidget {
   /// 2. Passing the style as a local asset. Create a JSON file in the `assets` and add a reference in `pubspec.yml`. Set the style string to the relative path for this asset in order to load it into the map.
   /// 3. Passing the style as a local file. create an JSON file in app directory (e.g. ApplicationDocumentsDirectory). Set the style string to the absolute path of this JSON file.
   /// 4. Passing the raw JSON of the map style. This is only supported on Android.
-  final String? styleString;
+  final String styleString;
 
   /// Preferred bounds for the camera zoom level.
   ///
@@ -257,9 +262,12 @@ class _MaplibreMapState extends State<MaplibreMap> {
         "annotationOrder must not have duplicate types");
     final Map<String, dynamic> creationParams = <String, dynamic>{
       'initialCameraPosition': widget.initialCameraPosition.toMap(),
+      'styleString': widget.styleString,
       'options': _MaplibreMapOptions.fromWidget(widget).toMap(),
-      //'onAttributionClickOverride': widget.onAttributionClick != null,
       'dragEnabled': widget.dragEnabled,
+      if (widget.iosLongClickDuration != null)
+        'iosLongClickDurationMilliseconds':
+            widget.iosLongClickDuration!.inMilliseconds,
     };
     return _maplibreGlPlatform.buildView(
         creationParams, onPlatformViewCreated, widget.gestureRecognizers);

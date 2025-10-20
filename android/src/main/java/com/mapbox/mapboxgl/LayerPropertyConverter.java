@@ -15,6 +15,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 
+
 import static com.mapbox.mapboxgl.Convert.toMap;
 
 class LayerPropertyConverter {
@@ -106,9 +107,9 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.iconTextFitPadding(expression));
           break;
         case "icon-image":
-          if (jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
+          if(jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()){
             properties.add(PropertyFactory.iconImage(jsonElement.getAsString()));
-          } else {
+          }else{
             properties.add(PropertyFactory.iconImage(expression));
           }
           break;
@@ -375,6 +376,50 @@ class LayerPropertyConverter {
     return properties.toArray(new PropertyValue[properties.size()]);
   }
 
+  static PropertyValue[] interpretFillExtrusionLayerProperties(Object o) {
+    final Map<String, String> data = (Map<String, String>) toMap(o);
+    final List<PropertyValue> properties = new LinkedList();
+    final JsonParser parser = new JsonParser();
+
+    for (Map.Entry<String, String> entry : data.entrySet()) {
+      final JsonElement jsonElement = parser.parse(entry.getValue());
+      Expression expression = Expression.Converter.convert(jsonElement);
+      switch (entry.getKey()) {
+        case "fill-extrusion-opacity":
+          properties.add(PropertyFactory.fillExtrusionOpacity(expression));
+          break;
+        case "fill-extrusion-color":
+          properties.add(PropertyFactory.fillExtrusionColor(expression));
+          break;
+        case "fill-extrusion-translate":
+          properties.add(PropertyFactory.fillExtrusionTranslate(expression));
+          break;
+        case "fill-extrusion-translate-anchor":
+          properties.add(PropertyFactory.fillExtrusionTranslateAnchor(expression));
+          break;
+        case "fill-extrusion-pattern":
+          properties.add(PropertyFactory.fillExtrusionPattern(expression));
+          break;
+        case "fill-extrusion-height":
+          properties.add(PropertyFactory.fillExtrusionHeight(expression));
+          break;
+        case "fill-extrusion-base":
+          properties.add(PropertyFactory.fillExtrusionBase(expression));
+          break;
+        case "fill-extrusion-vertical-gradient":
+          properties.add(PropertyFactory.fillExtrusionVerticalGradient(expression));
+          break;
+        case "visibility":
+          properties.add(PropertyFactory.visibility(entry.getValue().substring(1, entry.getValue().length() - 1)));
+          break;
+        default:
+          break;
+      }
+    }
+
+    return properties.toArray(new PropertyValue[properties.size()]);
+  }
+
   static PropertyValue[] interpretRasterLayerProperties(Object o) {
     final Map<String, String> data = (Map<String, String>) toMap(o);
     final List<PropertyValue> properties = new LinkedList();
@@ -445,6 +490,41 @@ class LayerPropertyConverter {
           break;
         case "hillshade-accent-color":
           properties.add(PropertyFactory.hillshadeAccentColor(expression));
+          break;
+        case "visibility":
+          properties.add(PropertyFactory.visibility(entry.getValue().substring(1, entry.getValue().length() - 1)));
+          break;
+        default:
+          break;
+      }
+    }
+
+    return properties.toArray(new PropertyValue[properties.size()]);
+  }
+
+  static PropertyValue[] interpretHeatmapLayerProperties(Object o) {
+    final Map<String, String> data = (Map<String, String>) toMap(o);
+    final List<PropertyValue> properties = new LinkedList();
+    final JsonParser parser = new JsonParser();
+
+    for (Map.Entry<String, String> entry : data.entrySet()) {
+      final JsonElement jsonElement = parser.parse(entry.getValue());
+      Expression expression = Expression.Converter.convert(jsonElement);
+      switch (entry.getKey()) {
+        case "heatmap-radius":
+          properties.add(PropertyFactory.heatmapRadius(expression));
+          break;
+        case "heatmap-weight":
+          properties.add(PropertyFactory.heatmapWeight(expression));
+          break;
+        case "heatmap-intensity":
+          properties.add(PropertyFactory.heatmapIntensity(expression));
+          break;
+        case "heatmap-color":
+          properties.add(PropertyFactory.heatmapColor(expression));
+          break;
+        case "heatmap-opacity":
+          properties.add(PropertyFactory.heatmapOpacity(expression));
           break;
         case "visibility":
           properties.add(PropertyFactory.visibility(entry.getValue().substring(1, entry.getValue().length() - 1)));

@@ -1,4 +1,11 @@
+include: package:flutter_lints/flutter.yaml
+
 analyzer:
   errors:
     # remove once git dependencies have been removed
     invalid_dependency: ignore
+
+linter:
+  rules:
+    camel_case_types: false
+    constant_identifier_names: false

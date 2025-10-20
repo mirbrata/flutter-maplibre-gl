@@ -510,6 +510,40 @@ final class MapboxMapController
     }
   }
 
+  private void addFillExtrusionLayer(
+          String layerName,
+          String sourceName,
+          String belowLayerId,
+          String sourceLayer,
+          Float minZoom,
+          Float maxZoom,
+          PropertyValue[] properties,
+          boolean enableInteraction,
+          Expression filter) {
+    FillExtrusionLayer fillLayer = new FillExtrusionLayer(layerName, sourceName);
+    fillLayer.setProperties(properties);
+    if (sourceLayer != null) {
+      fillLayer.setSourceLayer(sourceLayer);
+    }
+    if (minZoom != null) {
+      fillLayer.setMinZoom(minZoom);
+    }
+    if (maxZoom != null) {
+      fillLayer.setMaxZoom(maxZoom);
+    }
+    if (filter != null) {
+      fillLayer.setFilter(filter);
+    }
+    if (belowLayerId != null) {
+      style.addLayerBelow(fillLayer, belowLayerId);
+    } else {
+      style.addLayer(fillLayer);
+    }
+    if (enableInteraction) {
+      interactiveFeatureLayerIds.add(layerName);
+    }
+  }
+
   private void addCircleLayer(
       String layerName,
       String sourceName,
@@ -582,6 +616,29 @@ final class MapboxMapController
       PropertyValue[] properties,
       Expression filter) {
     HillshadeLayer layer = new HillshadeLayer(layerName, sourceName);
+    layer.setProperties(properties);
+    if (minZoom != null) {
+      layer.setMinZoom(minZoom);
+    }
+    if (maxZoom != null) {
+      layer.setMaxZoom(maxZoom);
+    }
+    if (belowLayerId != null) {
+      style.addLayerBelow(layer, belowLayerId);
+    } else {
+      style.addLayer(layer);
+    }
+  }
+
+  private void addHeatmapLayer(
+      String layerName,
+      String sourceName,
+      Float minZoom,
+      Float maxZoom,
+      String belowLayerId,
+      PropertyValue[] properties,
+      Expression filter) {
+    HeatmapLayer layer = new HeatmapLayer(layerName, sourceName);
     layer.setProperties(properties);
     if (minZoom != null) {
       layer.setMinZoom(minZoom);
@@ -1037,6 +1094,37 @@ final class MapboxMapController
           result.success(null);
           break;
         }
+      case "fillExtrusionLayer#add":
+      {
+        final String sourceId = call.argument("sourceId");
+        final String layerId = call.argument("layerId");
+        final String belowLayerId = call.argument("belowLayerId");
+        final String sourceLayer = call.argument("sourceLayer");
+        final Double minzoom = call.argument("minzoom");
+        final Double maxzoom = call.argument("maxzoom");
+        final String filter = call.argument("filter");
+        final boolean enableInteraction = call.argument("enableInteraction");
+        final PropertyValue[] properties =
+                LayerPropertyConverter.interpretFillExtrusionLayerProperties(
+                        call.argument("properties"));
+
+        Expression filterExpression = parseFilter(filter);
+
+        addFillExtrusionLayer(
+                layerId,
+                sourceId,
+                belowLayerId,
+                sourceLayer,
+                minzoom != null ? minzoom.floatValue() : null,
+                maxzoom != null ? maxzoom.floatValue() : null,
+                properties,
+                enableInteraction,
+                filterExpression);
+        updateLocationComponentLayer();
+
+        result.success(null);
+        break;
+      }
       case "circleLayer#add":
         {
           final String sourceId = call.argument("sourceId");
@@ -1099,6 +1187,28 @@ final class MapboxMapController
           final PropertyValue[] properties =
               LayerPropertyConverter.interpretHillshadeLayerProperties(call.argument("properties"));
           addHillshadeLayer(
+              layerId,
+              sourceId,
+              minzoom != null ? minzoom.floatValue() : null,
+              maxzoom != null ? maxzoom.floatValue() : null,
+              belowLayerId,
+              properties,
+              null);
+          updateLocationComponentLayer();
+
+          result.success(null);
+          break;
+        }
+      case "heatmapLayer#add":
+        {
+          final String sourceId = call.argument("sourceId");
+          final String layerId = call.argument("layerId");
+          final String belowLayerId = call.argument("belowLayerId");
+          final Double minzoom = call.argument("minzoom");
+          final Double maxzoom = call.argument("maxzoom");
+          final PropertyValue[] properties =
+              LayerPropertyConverter.interpretHeatmapLayerProperties(call.argument("properties"));
+          addHeatmapLayer(
               layerId,
               sourceId,
               minzoom != null ? minzoom.floatValue() : null,
@@ -1395,7 +1505,9 @@ final class MapboxMapController
 
           Layer layer = style.getLayer(layerId);
 
-          layer.setProperties(PropertyFactory.visibility(visible ? Property.VISIBLE : Property.NONE));
+          if (layer != null) {
+            layer.setProperties(PropertyFactory.visibility(visible ? Property.VISIBLE : Property.NONE));
+          }
 
           result.success(null);
           break;
@@ -1512,7 +1624,24 @@ final class MapboxMapController
   @Override
   public void onCameraTrackingChanged(int currentMode) {
     final Map<String, Object> arguments = new HashMap<>(2);
-    arguments.put("mode", currentMode);
+    switch (currentMode) {
+        case CameraMode.NONE:
+            arguments.put("mode", 0);
+            break;
+        case CameraMode.TRACKING:
+            arguments.put("mode", 1);
+            break;
+        case CameraMode.TRACKING_COMPASS:
+            arguments.put("mode", 2);
+            break;
+        case CameraMode.TRACKING_GPS:
+            arguments.put("mode", 3);
+            break;
+        default:
+            Log.e(TAG, "Unable to map " + currentMode + " to a tracking mode");
+            return;
+    }
+
     methodChannel.invokeMethod("map#onCameraTrackingChanged", arguments);
   }
 
