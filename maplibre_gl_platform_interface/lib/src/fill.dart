@@ -4,14 +4,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-part of maplibre_gl_platform_interface;
+part of '../maplibre_gl_platform_interface.dart';
 
 FillOptions translateFillOptions(FillOptions options, LatLng delta) {
   if (options.geometry != null) {
-    List<List<LatLng>> newGeometry = [];
-    for (var ring in options.geometry!) {
-      List<LatLng> newRing = [];
-      for (var coords in ring) {
+    final newGeometry = <List<LatLng>>[];
+    for (final ring in options.geometry!) {
+      final newRing = <LatLng>[];
+      for (final coords in ring) {
         newRing.add(coords + delta);
       }
       newGeometry.add(newRing);
@@ -28,6 +28,7 @@ class Fill implements Annotation {
   ///
   /// The identifier is an arbitrary unique string.
   final String _id;
+  @override
   String get id => _id;
 
   final Map? _data;
@@ -93,7 +94,7 @@ class FillOptions {
   }
 
   dynamic toJson([bool addGeometry = true]) {
-    final Map<String, dynamic> json = <String, dynamic>{};
+    final json = <String, dynamic>{};
 
     void addIfPresent(String fieldName, dynamic value) {
       if (value != null) {
