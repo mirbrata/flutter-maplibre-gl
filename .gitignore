@@ -57,3 +57,15 @@ melos_overrides.yaml
 .fvmrc
 .ruby-version
 Gemfile*
+
+# 
+android/.gradle
+android/local.properties
+local.properties
+example/ios/Flutter/ephemeral
+example/macos/Flutter/ephemeral
+flutter_export_environment.sh
+Generated.xcconfig
+GeneratedPluginRegistrant.m
+GeneratedPluginRegistrant.h
+GeneratedPluginRegistrant.java
